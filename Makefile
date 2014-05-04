@@ -1,2 +1,4 @@
+CC=gcc
+
 repl: repl.c
-	gcc -o repl -Wall repl.c
+	$(CC) -o repl -Wall repl.c
