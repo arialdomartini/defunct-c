@@ -1,4 +1,8 @@
 CC=gcc
+CFLAGS=-Wall
 
-repl: repl.c
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+repl: repl.o
 	$(CC) -o repl -Wall repl.c
