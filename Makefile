@@ -1,8 +1,10 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -I.
+OBJ = repl.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-repl: repl.o
-	$(CC) -o repl -Wall repl.c
+repl: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
