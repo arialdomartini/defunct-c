@@ -1,16 +1,21 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <editline/readline.h>
+#include <editline/history.h>
+
 #define BUFFER_SIZE 8192
 
-static char input[BUFFER_SIZE];
+static char command[BUFFER_SIZE];
 
 int main(int argc, char** argv) {
 
   puts(">> Defunct v0.1");
 
   while (1) {
-    fputs(": ", stdout);
-    fgets(input, BUFFER_SIZE, stdin);
-    printf("%s", input);
+    char* input_line = readline(": ");
+    printf("%s\n", input_line);
+    free(input_line);
   }
 
   return 0;

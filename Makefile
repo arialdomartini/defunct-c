@@ -1,7 +1,7 @@
 IDIR =../include
 CC=gcc
 ODIR=obj
-CFLAGS=-Wall -I$(IDIR)
+CFLAGS=-Wall -I$(IDIR) -ledit
 
 _OBJ = repl.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
