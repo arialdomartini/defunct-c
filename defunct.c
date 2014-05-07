@@ -8,33 +8,44 @@
 #define BUFFER_SIZE 8192
 
 
-void defineGrammar(Number, MathOperator, SExpression, Lisp) {
+struct terms {
+  mpc_parser_t* number;
+  mpc_parser_t* mathOperator;
+  mpc_parser_t* sExpression;
+  mpc_parser_t* program;
+};
+
+struct terms defineGrammar() {
+  struct terms t = {
+    .number = mpc_new("number"),
+    .mathOperator = mpc_new("mathOperator"),
+    .sExpression = mpc_new("sexpression"),
+    .program = mpc_new("program")
+  };
+
   mpca_lang(MPCA_LANG_DEFAULT,
   "\
-    number       :  /-?[0-9]+/ ;                                   \
-    operator     :  '+' | '-' | '*' | '/' ;                        \
-    sexpression  :  <number> | '[' <operator> <sexpression>+ ']' ; \
-    program      :  /^/ <operator> <sexpression>+ /$/ ;            \
+    number       :  /-?[0-9]+/ ;                                       \
+    mathOperator :  '+' | '-' | '*' | '/' ;                            \
+    sexpression  :  <number> | '[' <mathOperator> <sexpression>+ ']' ; \
+    program      :  /^/ <mathOperator> <sexpression>+ /$/ ;            \
   ",
-   Number, MathOperator, SExpression, Lisp);
+   t.number, t.mathOperator, t.sExpression, t.program);
+
+  return t;
 }
 
 int main(int argc, char** argv) {
 
   puts(">> Defunct v0.3");
 
-  mpc_parser_t* Number = mpc_new("number");
-  mpc_parser_t* MathOperator = mpc_new("operator");
-  mpc_parser_t* SExpression = mpc_new("sexpression");
-  mpc_parser_t* Lisp = mpc_new("program");
-
-  defineGrammar(Number, MathOperator, SExpression, Lisp);
+  struct terms t = defineGrammar();
 
   while (1) {
     char* input = readline(": ");
 
     mpc_result_t r;
-    if (mpc_parse("<stdin>", input, Lisp, &r)) {
+    if (mpc_parse("<stdin>", input, t.program, &r)) {
       mpc_ast_print(r.output);
       mpc_ast_delete(r.output);
     } else {
@@ -43,7 +54,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  mpc_cleanup(4, Number, MathOperator, SExpression, Lisp);
+  mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
 
   return 0;
 }
