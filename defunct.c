@@ -7,6 +7,18 @@
 
 #define BUFFER_SIZE 8192
 
+
+void defineGrammar(Number, MathOperator, SExpression, Lisp) {
+  mpca_lang(MPCA_LANG_DEFAULT,
+  "\
+    number       :  /-?[0-9]+/ ;                                   \
+    operator     :  '+' | '-' | '*' | '/' ;                        \
+    sexpression  :  <number> | '[' <operator> <sexpression>+ ']' ; \
+    program      :  /^/ <operator> <sexpression>+ /$/ ;            \
+  ",
+   Number, MathOperator, SExpression, Lisp);
+}
+
 int main(int argc, char** argv) {
 
   puts(">> Defunct v0.3");
@@ -16,15 +28,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* SExpression = mpc_new("sexpression");
   mpc_parser_t* Lisp = mpc_new("program");
 
-  mpca_lang(MPCA_LANG_DEFAULT,
-  "\
-    number       :  /-?[0-9]+/ ;                                   \
-    operator     :  '+' | '-' | '*' | '/' ;                        \
-    sexpression  :  <number> | '[' <operator> <sexpression>+ ']' ; \
-    program      :  /^/ <operator> <sexpression>+ /$/ ;            \
-  ",
-   Number, MathOperator, SExpression, Lisp);
-
+  defineGrammar(Number, MathOperator, SExpression, Lisp);
 
   while (1) {
     char* input = readline(": ");
