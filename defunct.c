@@ -35,17 +35,23 @@ struct terms defineGrammar() {
   return t;
 }
 
+void teardown(struct terms t) {
+  mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
+}
+
+
+
 int main(int argc, char** argv) {
 
   puts(">> Defunct v0.3");
 
-  struct terms t = defineGrammar();
+  struct terms terms = defineGrammar();
 
   while (1) {
     char* input = readline(": ");
 
     mpc_result_t r;
-    if (mpc_parse("<stdin>", input, t.program, &r)) {
+    if (mpc_parse("<stdin>", input, terms.program, &r)) {
       mpc_ast_print(r.output);
       mpc_ast_delete(r.output);
     } else {
@@ -54,7 +60,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
+  teardown(terms);
 
   return 0;
 }
