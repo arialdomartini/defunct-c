@@ -7,7 +7,6 @@
 
 #define BUFFER_SIZE 8192
 
-
 struct terms {
   mpc_parser_t* number;
   mpc_parser_t* mathOperator;
@@ -40,6 +39,15 @@ void teardown(struct terms t) {
 }
 
 
+void print_result(mpc_result_t result) {
+  mpc_ast_print(result.output);
+  mpc_ast_delete(result.output);
+}
+
+void print_error(mpc_result_t result) {
+  mpc_err_print(result.error);
+  mpc_err_delete(result.error);
+}
 
 int main(int argc, char** argv) {
 
@@ -50,13 +58,11 @@ int main(int argc, char** argv) {
   while (1) {
     char* input = readline(": ");
 
-    mpc_result_t r;
-    if (mpc_parse("<stdin>", input, terms.program, &r)) {
-      mpc_ast_print(r.output);
-      mpc_ast_delete(r.output);
+    mpc_result_t result;
+    if (mpc_parse("<stdin>", input, terms.program, &result)) {
+      print_result(result);
     } else {
-      mpc_err_print(r.error);
-      mpc_err_delete(r.error);
+      print_error(result);
     }
   }
 
