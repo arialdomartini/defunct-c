@@ -18,10 +18,10 @@ int main(int argc, char** argv) {
 
   mpca_lang(MPCA_LANG_DEFAULT,
   "\
-    number   : /-?[0-9]+/ ;\
-    operator : '+' | '-' | '*' | '/' ;\
-    sexpression     : <number> | '[' <operator> <sexpression>+ ']' ;\
-    program    : /^/ <operator> <sexpression>+ /$/ ;\
+    number       :  /-?[0-9]+/ ;                                   \
+    operator     :  '+' | '-' | '*' | '/' ;                        \
+    sexpression  :  <number> | '[' <operator> <sexpression>+ ']' ; \
+    program      :  /^/ <operator> <sexpression>+ /$/ ;            \
   ",
    Number, MathOperator, SExpression, Lisp);
 
