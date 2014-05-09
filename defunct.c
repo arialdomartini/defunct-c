@@ -5,7 +5,7 @@
 #include <editline/readline.h>
 #include <editline/history.h>
 
-#define BUFFER_SIZE 8192
+
 
 struct terms {
   mpc_parser_t* number;
@@ -13,6 +13,7 @@ struct terms {
   mpc_parser_t* sExpression;
   mpc_parser_t* program;
 };
+
 
 struct terms defineGrammar() {
   struct terms t = {
