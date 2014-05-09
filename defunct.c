@@ -40,15 +40,47 @@ void teardown(struct terms t) {
 }
 
 
-void print_result(mpc_result_t result) {
-  mpc_ast_print(result.output);
-  mpc_ast_delete(result.output);
+
+long eval_operator(long x, char* operator, long y) {
+  if (strcmp(operator, "+") == 0) { return x + y; }
+  if (strcmp(operator, "-") == 0) { return x - y; }
+  if (strcmp(operator, "*") == 0) { return x * y; }
+  if (strcmp(operator, "/") == 0) { return x / y; }
+  return 0;
+}
+
+long eval(mpc_ast_t* node) {
+  
+  if (strstr(node->tag, "number")) { 
+    return atoi(node->contents); 
+  }
+
+  int i = 1;
+  char* operator = node->children[i++]->contents;
+  long thirdChild = eval(node->children[i++]);
+  
+  while (strstr(node->children[i]->tag, "sexpression")) {
+    thirdChild = eval_operator(thirdChild, operator, eval(node->children[i]));
+    i++;
+  }
+  
+  return thirdChild; 
+}
+
+
+void print_result(mpc_result_t abstractSyntaxtTree) {
+  long result = eval(abstractSyntaxtTree.output);
+  printf("%li\n", result);
+  mpc_ast_delete(abstractSyntaxtTree.output);
 }
 
 void print_error(mpc_result_t result) {
   mpc_err_print(result.error);
   mpc_err_delete(result.error);
 }
+
+
+
 
 int main(int argc, char** argv) {
 
@@ -59,11 +91,11 @@ int main(int argc, char** argv) {
   while (1) {
     char* input = readline(": ");
 
-    mpc_result_t result;
-    if (mpc_parse("<stdin>", input, terms.program, &result)) {
-      print_result(result);
+    mpc_result_t abstractSyntaxtTree;
+    if (mpc_parse("<stdin>", input, terms.program, &abstractSyntaxtTree)) {
+      print_result(abstractSyntaxtTree);
     } else {
-      print_error(result);
+      print_error(abstractSyntaxtTree);
     }
   }
 
