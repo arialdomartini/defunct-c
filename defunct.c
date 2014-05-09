@@ -39,14 +39,28 @@ void teardown(struct terms t) {
   mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
 }
 
+long sum(long x, long y) {
+  return x + y;
+}
 
+long subtract(long x, long y) {
+  return x - y;
+}
+
+long multiply(long x, long y) {
+  return x * y;
+}
+
+long divide(long x, long y) {
+  return x / y;
+}
 
 long eval_operator(long x, char* operator, long y) {
-  if (strcmp(operator, "+") == 0) { return x + y; }
-  if (strcmp(operator, "-") == 0) { return x - y; }
-  if (strcmp(operator, "*") == 0) { return x * y; }
-  if (strcmp(operator, "/") == 0) { return x / y; }
-  return 0;
+  if (strcmp(operator, "+") == 0) { return sum(x,y); }
+  else if (strcmp(operator, "-") == 0) { return subtract(x,y); }
+  else if (strcmp(operator, "*") == 0) { return multiply(x,y); }
+  else if (strcmp(operator, "/") == 0) { return divide(x,y); }
+  else exit(-1);
 }
 
 long eval(mpc_ast_t* node) {
