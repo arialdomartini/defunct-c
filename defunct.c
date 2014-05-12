@@ -6,7 +6,6 @@
 #include <editline/history.h>
 
 
-
 struct terms {
   mpc_parser_t* number;
   mpc_parser_t* mathOperator;
@@ -39,23 +38,23 @@ void teardown(struct terms t) {
   mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
 }
 
-long sum(long x, long y) {
+long double sum(long double x, long double y) {
   return x + y;
 }
 
-long subtract(long x, long y) {
+long double subtract(long double x, long double y) {
   return x - y;
 }
 
-long multiply(long x, long y) {
+long double multiply(long double x, long double y) {
   return x * y;
 }
 
-long divide(long x, long y) {
+long double divide(long double x, long double y) {
   return x / y;
 }
 
-long eval_operator(long x, char* operator, long y) {
+long double eval_operator(long double x, char* operator, long double y) {
   if (strcmp(operator, "+") == 0) { return sum(x,y); }
   else if (strcmp(operator, "-") == 0) { return subtract(x,y); }
   else if (strcmp(operator, "*") == 0) { return multiply(x,y); }
@@ -63,7 +62,7 @@ long eval_operator(long x, char* operator, long y) {
   else exit(-1);
 }
 
-long eval(mpc_ast_t* node) {
+long double eval(mpc_ast_t* node) {
   
   if (strstr(node->tag, "number")) { 
     return atoi(node->contents); 
@@ -71,7 +70,7 @@ long eval(mpc_ast_t* node) {
 
   int i = 1;
   char* operator = node->children[i++]->contents;
-  long expression = eval(node->children[i++]);
+  long double expression = eval(node->children[i++]);
   
   while (strstr(node->children[i]->tag, "sexpression")) {
     expression = eval_operator(expression, operator, eval(node->children[i]));
@@ -83,8 +82,8 @@ long eval(mpc_ast_t* node) {
 
 
 void print_result(mpc_result_t abstractSyntaxtTree) {
-  long result = eval(abstractSyntaxtTree.output);
-  printf("%li\n", result);
+  long double result = eval(abstractSyntaxtTree.output);
+  printf("%Lf\n", result);
   mpc_ast_delete(abstractSyntaxtTree.output);
 }
 
