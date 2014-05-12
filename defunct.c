@@ -71,14 +71,14 @@ long eval(mpc_ast_t* node) {
 
   int i = 1;
   char* operator = node->children[i++]->contents;
-  long thirdChild = eval(node->children[i++]);
+  long expression = eval(node->children[i++]);
   
   while (strstr(node->children[i]->tag, "sexpression")) {
-    thirdChild = eval_operator(thirdChild, operator, eval(node->children[i]));
+    expression = eval_operator(expression, operator, eval(node->children[i]));
     i++;
   }
   
-  return thirdChild; 
+  return expression; 
 }
 
 
