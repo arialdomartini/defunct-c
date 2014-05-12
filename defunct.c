@@ -6,13 +6,37 @@
 #include <editline/history.h>
 
 
-
 struct terms {
   mpc_parser_t* number;
   mpc_parser_t* mathOperator;
   mpc_parser_t* sExpression;
   mpc_parser_t* program;
 };
+
+enum { LVAL_NUMBER, LVAL_ERROR };
+
+enum { LERR_DIVISON_BY_ZERO, LERR_UNKNOWN_OPERATOR, LERR_BAD_NUMBER };
+
+typedef struct {
+  int type;
+  long double number;
+  int error;
+} lval;
+
+
+lval number_to_lval(long double number) {
+  lval val;
+  val.type = LVAL_NUMBER;
+  val.number = number;
+  return val;
+}
+
+lval error_to_lval(int errorIndex) {
+  lval val;
+  val.type = LVAL_ERROR;
+  val.error = errorIndex;
+  return val;
+}
 
 
 struct terms defineGrammar() {
@@ -39,39 +63,54 @@ void teardown(struct terms t) {
   mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
 }
 
-long sum(long x, long y) {
-  return x + y;
+lval sum(long double x, long double y) {
+  return number_to_lval(x + y);
 }
 
-long subtract(long x, long y) {
-  return x - y;
+lval subtract(long double x, long double y) {
+  return number_to_lval(x - y);
 }
 
-long multiply(long x, long y) {
-  return x * y;
+lval multiply(long double x, long double y) {
+  return number_to_lval(x * y);
 }
 
-long divide(long x, long y) {
-  return x / y;
-}
-
-long eval_operator(long x, char* operator, long y) {
-  if (strcmp(operator, "+") == 0) { return sum(x,y); }
-  else if (strcmp(operator, "-") == 0) { return subtract(x,y); }
-  else if (strcmp(operator, "*") == 0) { return multiply(x,y); }
-  else if (strcmp(operator, "/") == 0) { return divide(x,y); }
-  else exit(-1);
-}
-
-long eval(mpc_ast_t* node) {
-  
-  if (strstr(node->tag, "number")) { 
-    return atoi(node->contents); 
+lval divide(long double x, long double y) {
+  if(y == 0) {
+    return error_to_lval(LERR_DIVISON_BY_ZERO);
   }
+  return number_to_lval(x / y);
+}
+
+lval eval_operator(lval x, char* operator, lval y) {
+  if(x.type == LVAL_ERROR) {
+    return x;
+  }
+  if(y.type == LVAL_ERROR) {
+    return y;
+  }
+
+  if      (strcmp(operator, "+") == 0) { return sum(x.number,y.number); }
+  else if (strcmp(operator, "-") == 0) { return subtract(x.number,y.number); }
+  else if (strcmp(operator, "*") == 0) { return multiply(x.number,y.number); }
+  else if (strcmp(operator, "/") == 0) { return divide(x.number,y.number); }
+
+  else return error_to_lval(LERR_UNKNOWN_OPERATOR);
+}
+
+
+lval eval(mpc_ast_t* node) {
+
+  if (strstr(node->tag, "number")) {
+    errno = 0;
+    long double x = strtod(node->contents, NULL);
+    return errno != ERANGE ? number_to_lval(x) : error_to_lval(LERR_BAD_NUMBER);
+  }
+  
 
   int i = 1;
   char* operator = node->children[i++]->contents;
-  long expression = eval(node->children[i++]);
+  lval expression = eval(node->children[i++]);
   
   while (strstr(node->children[i]->tag, "sexpression")) {
     expression = eval_operator(expression, operator, eval(node->children[i]));
@@ -81,10 +120,23 @@ long eval(mpc_ast_t* node) {
   return expression; 
 }
 
+void print_lval(lval lval) {
+  switch (lval.type) {
+    case LVAL_NUMBER: printf("%Lf", lval.number); break;
+
+    case LVAL_ERROR:
+      if (lval.error == LERR_DIVISON_BY_ZERO) { printf("Error: division by zero."); }
+      if (lval.error == LERR_UNKNOWN_OPERATOR)   { printf("Error: unknown operator."); }
+      if (lval.error == LERR_BAD_NUMBER)         { printf("Error: bad number"); }
+    break;
+  }
+  printf("\n");
+}
+
 
 void print_result(mpc_result_t abstractSyntaxtTree) {
-  long result = eval(abstractSyntaxtTree.output);
-  printf("%li\n", result);
+  lval result = eval(abstractSyntaxtTree.output);
+  print_lval(result);
   mpc_ast_delete(abstractSyntaxtTree.output);
 }
 
