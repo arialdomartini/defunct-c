@@ -10,7 +10,7 @@ static char command[BUFFER_SIZE];
 
 int main(int argc, char** argv) {
 
-  puts(">> Defunct v0.1");
+  puts(">> Defunct v0.2");
 
   while (1) {
     char* input_line = readline(": ");

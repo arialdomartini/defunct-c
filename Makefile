@@ -3,17 +3,17 @@ CC=gcc
 ODIR=obj
 CFLAGS=-Wall -I$(IDIR) -ledit
 
-_OBJ = repl.o
+_OBJ = defunct.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)
 	mkdir -p $(ODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-repl: $(OBJ)
+defunct: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 
 clean:
-	rm -fr $(ODIR) *~ repl $(INCDIR)/*~ 
+	rm -fr $(ODIR) *~ defunct $(INCDIR)/*~ 
