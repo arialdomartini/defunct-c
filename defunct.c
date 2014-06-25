@@ -5,62 +5,196 @@
 #include <editline/readline.h>
 #include <editline/history.h>
 
-
 struct terms {
   mpc_parser_t* number;
-  mpc_parser_t* mathOperator;
-  mpc_parser_t* sExpression;
+  mpc_parser_t* symbol;
+  mpc_parser_t* sexpression;
+  mpc_parser_t* expression;
   mpc_parser_t* program;
 };
 
-enum { LVAL_NUMBER, LVAL_ERROR };
-
+enum { LVAL_NUMBER, LVAL_SYMBOL, LVAL_SEXPRESSION, LVAL_ERROR };
 enum { LERR_DIVISON_BY_ZERO, LERR_UNKNOWN_OPERATOR, LERR_BAD_NUMBER };
 
-typedef struct {
+
+typedef struct lval {
   int type;
   long double number;
-  int error;
+  char* error;
+  char* symbol;
+  int nchildren;
+  struct lval** children;
 } lval;
 
-
-lval number_to_lval(long double number) {
-  lval val;
-  val.type = LVAL_NUMBER;
-  val.number = number;
+lval* number_to_lval(long double number) {
+  lval* val = malloc(sizeof(lval));
+  val->type = LVAL_NUMBER;
+  val->number = number;
   return val;
 }
 
-lval error_to_lval(int errorIndex) {
-  lval val;
-  val.type = LVAL_ERROR;
-  val.error = errorIndex;
+
+lval* error_to_lval(char* errorMessage) {
+  lval* val = malloc(sizeof(lval));
+  val->type = LVAL_ERROR;
+  val->err = malloc(strlen(errorMessage) + 1);
+  strcpy(val->err, errorMessage);
   return val;
 }
+
+lval* symbol_to_lval(char* symbol) {
+  lval* val = malloc(sizeof(lval));
+  val->type = LVAL_SYMBOL;
+  val->sym = malloc(strlen(symbol) + 1);
+  strcpy(val->sym, symbol);
+  return val;
+}
+
+lval* sexpression_to_lval(void) {
+  lval* val = malloc(sizeof(lval));
+  val->type = LVAL_SEXPRESSION;
+  val->nchildren = 0;
+  val->children = NULL;
+  return val;
+}
+
+
+void delele_lval(lval* val) {
+
+  switch (val->type) {
+  case LVAL_NUM: break;
+    
+  case LVAL_ERROR: free(val->err); break;
+  case LVAL_SYMBOL: free(val->sym); break;
+    
+  case LVAL_SEXPRESSION:
+    for (int i = 0; i < val->nchildren; i++) {
+      delete_lval(v->children[i]);
+    }
+    free(v->children);
+    break;
+  }
+  
+  free(val);
+}
+
+
+lval* add_lval(lval* val, lval* newVal) {
+  val->count++;
+  val->children = realloc(val->children, sizeof(lval*) * val->nchildren);
+  val->children[val->nchildren-1] = newVal;
+  return val;
+}
+
+lval* pop_lval(lval* val, int index) {
+  lval* found = val->cell[idex];
+  
+  memmove(&val->children[index], &val->children[index+1], sizeof(lval*) * (val->nchildren-index-1));
+  
+  val->nchildren--;
+  
+  val->children = realloc(val->children, sizeof(lval*) * val->nchildren);
+  return found;
+}
+
+
+lval* take_lval(lval* val, int index) {
+  lval* found = pop_lval(val, idex);
+  del_lval(val);
+  return found;
+}
+
+
+void print_lval(lval* val);
+
+void print_lval_expr(lval* val, char open, char close) {
+  putchar(open);
+  for (int i = 0; i < val->count; i++) {
+    
+    print_lval(val->children[i]);
+    
+    if (i != (v->count-1)) {
+      putchar(' ');
+    }
+  }
+  putchar(close);
+}
+
+
+void print_lval(lval* val) {
+  switch (val->type) {
+  case LVAL_NUMBER:      printf("%li", val->num); break;
+  case LVAL_ERROR:       printf("Error: %s", val->err); break;
+  case LVAL_SYMBOL:      printf("%s", val->sym); break;
+  case LVAL_SEXPRESSION: lval_expr_print(val, '(', ')'); break;
+  }
+}
+
+void println_lval(lval* val) { 
+  print_lval(v); 
+  putchar('\n'); 
+}
+
+
+lval* builtin_op(lval* a, char* op) {
+  
+  for (int i = 0; i < a->count; i++) {
+    if (a->children[i]->type != LVAL_NUMBER) {
+      delete_lval(a);
+      return lval_err("Cannot operate on non-number!");
+    }
+  }
+ 
+  lval* x = lval_pop(a, 0);
+  
+  if ((strcmp(op, "-") == 0) && a->count == 0) { x->num = -x->num; }
+  
+  while (a->count > 0) {
+  
+    lval* y = lval_pop(a, 0);
+
+  if      (strcmp(operator, "+") == 0) { x.number = sum(x.number,y.number); }
+  else if (strcmp(operator, "-") == 0) { x.number = subtract(x.number,y.number); }
+  else if (strcmp(operator, "*") == 0) { x.number = multiply(x.number,y.number); }
+  else if (strcmp(operator, "/") == 0) { 
+    if (y->num == 0) {
+      delete_lval(x); delete_lval(y);
+      x = lval_err("Division By Zero.");
+      break;
+    }
+    x.number = divide(x.number,y.number);
+  }
+  
+  delete_lval(a);
+  return x;
+} 
 
 
 struct terms defineGrammar() {
+
   struct terms t = {
     .number = mpc_new("number"),
-    .mathOperator = mpc_new("mathOperator"),
-    .sExpression = mpc_new("sexpression"),
+    .mathOperator = mpc_new("symbol"),
+    .sexpression = mpc_new("sexpression"),
+    .expression = mpc_new("expression"),
     .program = mpc_new("program")
   };
 
   mpca_lang(MPCA_LANG_DEFAULT,
   "\
     number       :  /-?[0-9]+/ ;                                       \
-    mathOperator :  '+' | '-' | '*' | '/' ;                            \
-    sexpression  :  <number> | '[' <mathOperator> <sexpression>+ ']' ; \
-    program      :  /^/ <mathOperator> <sexpression>+ /$/ ;            \
+    symbol       :  '+' | '-' | '*' | '/' ;                            \
+    sexpression  :  '(' <expression> ')' ;                             \
+    expression   :  <number> | <symbol> | <sexpression>;               \
+    program      :  /^/ <expression>* /$/ ;                            \
   ",
-   t.number, t.mathOperator, t.sExpression, t.program);
+    t.number, t.symbol, t.sexpression, t.expression, t.program);
 
   return t;
 }
 
 void teardown(struct terms t) {
-  mpc_cleanup(4, t.number, t.mathOperator, t.sExpression, t.program);
+  mpc_cleanup(4, t.number, t.symbol, t.sexpression, t.expression, t.program);
 }
 
 lval sum(long double x, long double y) {
